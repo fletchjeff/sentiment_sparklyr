@@ -1,0 +1,61 @@
+library(shiny)
+library(dplyr)
+library(ggplot2)
+
+happiest_characters <- read.csv("happiest_chars.csv")
+happiest_mean <- mean(happiest_characters$weighted_sum)
+#library(r2d3)
+
+
+app <- shinyApp(
+  ui <- fluidPage(
+
+
+  titlePanel("Happiest Simpsons Character"),
+
+
+  sidebarLayout(
+    sidebarPanel(
+
+      selectInput(
+          "var",
+          "Character:",
+          happiest_characters$raw_char,
+          size = 10,
+          selectize = FALSE
+        )    
+    ),
+
+    mainPanel(
+      textOutput("selected_var"),
+      textOutput("happiness_val"),
+      plotOutput("happiness_plot")
+    )
+  )
+),
+
+  server <- function(input, output) {
+    output$selected_var <- renderText({ 
+      paste(input$var)
+    })
+    
+    output$happiness_val <- renderText({ 
+      paste((happiest_characters %>% filter(raw_char == input$var))$weighted_sum)
+    })
+    
+    output$happiness_plot <- renderPlot({
+      small_list <- data.frame(
+        c(input$var,"Average"),
+        c((happiest_characters %>% filter(raw_char == input$var))$weighted_sum,happiest_mean)
+      )
+      colnames(small_list) <- c("raw_char", "weighted_sum")
+      
+        ggplot(small_list, aes(reorder(raw_char,weighted_sum), weighted_sum))+
+        geom_col(width = 0.7) + 
+        coord_flip()
+    })    
+    
+  }
+)
+
+runApp(app,port=as.numeric(Sys.getenv("CDSW_READONLY_PORT")), host="127.0.0.1", launch.browser="FALSE")
