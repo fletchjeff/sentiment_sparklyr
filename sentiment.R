@@ -143,7 +143,7 @@ sentence_values_tokenized <-
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 
 
-w2v <- ft_word2vec(sentence_values_tokenized, input_col = "wo_stop_words", output_col = "result", min_count = 10)
+w2v <- ft_word2vec(sentence_values_tokenized, input_col = "wo_stop_words", output_col = "result", min_count = 2)
 
 lm_model <- w2v %>% ml_linear_regression(weighted_sum ~ result)
 
@@ -153,3 +153,20 @@ ml_save(
    overwrite = TRUE
 )
 
+sentiment_pipeline <- ml_pipeline(sc) %>%
+  ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
+  ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words") %>%
+  ft_word2vec(input_col = "wo_stop_words", output_col = "result", min_count = 10) %>%
+  ft_r_formula(weighted_sum ~ result) %>% 
+  ml_linear_regression()
+
+sentiment_model <- ml_fit(sentiment_pipeline,sentence_values)
+
+ml_regression_evaluator(ml_transform(sentiment_model,sentence_values), label_col = "label",
+  prediction_col = "prediction", metric_name = "rmse")
+
+ml_save(
+   sentiment_model,
+   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/sentiment_model_r",sep=""),
+   overwrite = TRUE
+)
