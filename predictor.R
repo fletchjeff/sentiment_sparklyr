@@ -12,7 +12,6 @@ reloaded_model <- ml_load(sc, paste(Sys.getenv("STORAGE"),"/datalake/data/sentim
 
 #args <- fromJSON('{"sentence":"Im no dunce. I was born an oaf and Ill die an oaf"}')
 
-
 predict_sentiment <- function(args) {
   test_text_df <- as.data.frame(args$sentence)
   colnames(test_text_df) <- "spoken_words"

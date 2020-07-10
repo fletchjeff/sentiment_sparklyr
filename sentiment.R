@@ -75,7 +75,8 @@ simpsons_spark_table %>% group_by(raw_char) %>% count() %>% arrange(desc(n))
 #### Remove punctuation
 simpsons_spark_table <- 
   simpsons_spark_table %>% 
-  mutate(spoken_words = regexp_replace(spoken_words, "[_\"\'():;,.!?\\-]", " ")) 
+  mutate(spoken_words = regexp_replace(spoken_words, "\'", "")) %>%
+  mutate(spoken_words = regexp_replace(spoken_words, "[_\"():;,.!?\\-]", " "))
 
 #### Tokenize
 simpsons_spark_table <- 
@@ -123,7 +124,7 @@ p <-
   coord_flip()
 p
 
-## Linear Model
+## Creating a Linear Model using word2vec
 
 sentences <- simpsons_spark_table %>%  
   mutate(word = explode(wo_stop_words)) %>% 
@@ -138,20 +139,29 @@ sentence_values <- sentences %>%
 
 sentence_values_tokenized <- 
   sentence_values %>% 
-  mutate(spoken_words = regexp_replace(spoken_words, "[_\"\'():;,.!?\\-]", " ")) %>%
   ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 
 
 w2v <- ft_word2vec(sentence_values_tokenized, input_col = "wo_stop_words", output_col = "result", min_count = 2)
 
-lm_model <- w2v %>% ml_linear_regression(weighted_sum ~ result)
+w2v_model <- ft_word2vec(sc, input_col = "wo_stop_words", output_col = "result", min_count = 2)
 
-ml_save(
-   lm_model,
-   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lm_model_r",sep=""),
-   overwrite = TRUE
-)
+w2v_model_fitted <- ml_fit(w2v_model,sentence_values_tokenized)
+
+ml_find_synonyms(w2v_model_fitted,"doh",2)
+
+w2v_transformed <- ml_transform(w2v_model_fitted, sentence_values_tokenized)
+
+lm_model <- w2v_transformed %>% ml_linear_regression(weighted_sum ~ result)
+
+pred <- ml_predict(lm_model, w2v_transformed)
+
+ml_regression_evaluator(pred, label_col = "label",
+                        prediction_col = "prediction", metric_name = "rmse")
+
+
+## Creating a reusable model pipeline.
 
 sentiment_pipeline <- ml_pipeline(sc) %>%
   ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
@@ -161,9 +171,6 @@ sentiment_pipeline <- ml_pipeline(sc) %>%
   ml_linear_regression()
 
 sentiment_model <- ml_fit(sentiment_pipeline,sentence_values)
-
-ml_regression_evaluator(ml_transform(sentiment_model,sentence_values), label_col = "label",
-  prediction_col = "prediction", metric_name = "rmse")
 
 ml_save(
    sentiment_model,
