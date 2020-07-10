@@ -46,13 +46,16 @@ app <- shinyApp(
     output$happiness_plot <- renderPlot({
       small_list <- data.frame(
         c(input$var,"Average"),
-        c((happiest_characters %>% filter(raw_char == input$var))$weighted_sum,happiest_mean)
-      )
-      colnames(small_list) <- c("raw_char", "weighted_sum")
-      
-        ggplot(small_list, aes(reorder(raw_char,weighted_sum), weighted_sum))+
-        geom_col(width = 0.7) + 
-        coord_flip()
+        c((happiest_characters %>% filter(raw_char == input$var))$weighted_sum,happiest_mean),
+        c(ifelse((happiest_characters %>% filter(raw_char == input$var))$weighted_sum>happiest_mean,"green","red"),"grey")
+      ) 
+      colnames(small_list) <- c("raw_char", "weighted_sum" ,"color")
+      ggplot(small_list, aes(x=reorder(raw_char,weighted_sum), y=weighted_sum, fill=color))+
+      geom_col(width = 0.7) + 
+      scale_fill_identity() +
+      coord_flip() +
+      xlab("Character") + ylab("Happiness Value") +
+      ggtitle("Simpson Happiness Index")
     })    
     
   }
