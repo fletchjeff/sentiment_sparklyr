@@ -1,3 +1,5 @@
+install.packages("tidyverse")
+install.packages("sparklyr")
 library(xml2)
 library(httr)
 

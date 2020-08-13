@@ -27,10 +27,13 @@ config$spark.yarn.access.hadoopFileSystems <- storage
 sc <- spark_connect(master = "yarn-client", config=config)
 
 #### Read in the CSV data
+# The data is very simple dataset. Its 2 columns, on
 cols = list(
   raw_character_text = "character",
   spoken_words = "character"
 )
+
+# The first dataset is the 
 
 spark_read_csv(
   sc,
@@ -55,14 +58,19 @@ afinn_table <- tbl(sc, "afinn_table")
 afinn_table <- afinn_table %>% rename(word = V1, value = V2)
 
 simpsons_spark_table <- tbl(sc, "simpsons_spark_table")
+
+as.data.frame(head(simpsons_spark_table))
   
 simpsons_spark_table %>% count()
 
 #### Basic data cleaning
+
+# renaming a column
 simpsons_spark_table <- 
   simpsons_spark_table %>% 
   rename(raw_char = raw_character_text)
 
+# droping null / NA values
 simpsons_spark_table <- 
   simpsons_spark_table %>% 
   na.omit()
@@ -71,8 +79,11 @@ simpsons_spark_table <-
 simpsons_spark_table %>% group_by(raw_char) %>% count() %>% arrange(desc(n))
 
 ## Text Mining
+# https://spark.rstudio.com/guides/textmining/
+
 
 #### Remove punctuation
+# * mutate can use python.
 simpsons_spark_table <- 
   simpsons_spark_table %>% 
   mutate(spoken_words = regexp_replace(spoken_words, "\'", "")) %>%
@@ -157,9 +168,11 @@ lm_model <- w2v_transformed %>% ml_linear_regression(weighted_sum ~ result)
 
 pred <- ml_predict(lm_model, w2v_transformed)
 
-ml_regression_evaluator(pred, label_col = "label",
+ml_regression_evaluator(pred, label_col = "weighted_sum",
                         prediction_col = "prediction", metric_name = "rmse")
 
+
+pred %>% select(weighted_sum,prediction) %>% sdf_describe()
 
 ## Creating a reusable model pipeline.
 
