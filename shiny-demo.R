@@ -62,3 +62,14 @@ app <- shinyApp(
 )
 
 runApp(app,port=as.numeric(Sys.getenv("CDSW_READONLY_PORT")), host="127.0.0.1", launch.browser="FALSE")
+
+
+# library(httr)
+# result <- POST(
+#   "https://modelservice.ml-c9056e76-593.se-sandb.a465-9q4k.cloudera.site/model", 
+#   body = '{"accessKey":"mzn85fzd9u9g9jhgq2evvbxbqody8w1b","request":{"sentence":"Woo hoo!"}} ', 
+#   add_headers("Content-Type" = "application/json")
+# )
+# 
+# final_response = fromJSON(rawToChar(result$content))$response$result
+# final_response
