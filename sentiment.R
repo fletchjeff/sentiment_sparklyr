@@ -179,7 +179,7 @@ weighted_sum_summary
 
 weighted_sum_mean <- as.data.frame(weighted_sum_summary)[2,2]
 
-sentence_values %>% 
+sentence_scores <- sentence_values %>% 
   mutate(sent_score = ifelse(weighted_sum > weighted_sum_mean,1,0))
 
 sentence_values_tokenized <- 
@@ -187,40 +187,56 @@ sentence_values_tokenized <-
   ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 
-w2v_model <- ft_word2vec(sc, 
-                         input_col = "wo_stop_words", 
-                         output_col = "result", 
-                         #min_count = 5,
-                         #max_iter = 25,
-                         #vector_size = 400,
-                         #step_size = 0.0125
-                        )
+#w2v_model <- ft_word2vec(sc, 
+#                         input_col = "wo_stop_words", 
+#                         output_col = "result", 
+#                         min_count = 5,
+#                         max_iter = 25,
+#                         vector_size = 400,
+#                         step_size = 0.0125
+#                        )
 
-w2v_model_fitted <- ml_fit(w2v_model,sentence_values_tokenized)
+#w2v_model_fitted <- ml_fit(w2v_model,sentence_values_tokenized)
 
-w2v_model_fitted <- ml_load(sc,"s3a://demo-aws-1/datalake/data/sentiment/w2v_model_fitted")
+#ml_save(
+#   w2v_model_fitted,
+#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep=""),
+#   overwrite = TRUE
+#)
+
+w2v_model_fitted <- ml_load(
+  sc, 
+  paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep="")
+)
 
 
 #ml_find_synonyms(w2v_model_fitted,"doh",2)
 
 w2v_transformed <- ml_transform(w2v_model_fitted, sentence_values_tokenized)
 
-w2v_transformed <- w2v_transformed %>% mutate(sent_score = ifelse(weighted_sum>mean,1,0))
+#w2v_transformed <- w2v_transformed %>% mutate(sent_score = ifelse(weighted_sum>mean,1,0))
 
 
 w2v_transformed_split <- w2v_transformed %>% sdf_random_split(training=0.7, test = 0.3)
 
-maxIter= 500
-elasticNetParam = 0.0
-regParam = 0.01
-
 lr_model <- w2v_transformed_split$training %>% select(result,sent_score) %>% 
   ml_logistic_regression(
     sent_score ~ result,
-    #max_iter=maxIter, 
-    #elastic_net_param=elasticNetParam,
-    #reg_param = regParam
+    max_iter=500, 
+    elastic_net_param=0.0,
+    reg_param = 0.01
   )
+
+ml_save(
+   lr_model,
+   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lr_model",sep=""),
+   overwrite = TRUE
+)
+
+lr_model <- ml_load(
+  sc, 
+  paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lr_model",sep="")
+)
 
 
 density_plot <- function(X) {
@@ -244,17 +260,17 @@ ml_binary_classification_evaluator(pred_lr_test,label_col = "sent_score",
 
 ## Creating a reusable model pipeline.
 
-sentiment_pipeline <- ml_pipeline(sc) %>%
-  ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
-  ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words") %>%
-  ft_word2vec(input_col = "wo_stop_words", output_col = "result", min_count = 10) %>%
-  ft_r_formula(sent_score ~ result) %>% 
-  ml_linear_regression()
-
-sentiment_model <- ml_fit(sentiment_pipeline,sentence_values)
-
-ml_save(
-   sentiment_model,
-   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/sentiment_model_r",sep=""),
-   overwrite = TRUE
-)
+#sentiment_pipeline <- ml_pipeline(sc) %>%
+#  ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
+#  ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words") %>%
+#  ft_word2vec(input_col = "wo_stop_words", output_col = "result", min_count = 10) %>%
+#  ft_r_formula(sent_score ~ result) %>% 
+#  ml_linear_regression()
+#
+#sentiment_model <- ml_fit(sentiment_pipeline,sentence_values)
+#
+#ml_save(
+#   sentiment_model,
+#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/sentiment_model_r",sep=""),
+#   overwrite = TRUE
+#)

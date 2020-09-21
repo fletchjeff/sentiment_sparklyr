@@ -1,4 +1,6 @@
 install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("tibble")
 install.packages("sparklyr")
 library(xml2)
 library(httr)
