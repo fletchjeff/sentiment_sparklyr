@@ -28,4 +28,10 @@ def predict(args):
   sentence_df = remover.transform(sentence_df)
   sentence_df = w2v_model_fitted.transform(sentence_df)
   result = lr_model.transform(sentence_df).collect()[0]
-  return {"result" : result.prediction, "probability" : result.probability[0] }
+  #result.prediction
+  if result.prediction==0:
+    sentiment = 'Negative'
+  else:
+    sentiment = 'Positive'  
+  return {"sentiment" : sentiment, "confidence" : round(result.probability[0],3) }
+

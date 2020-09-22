@@ -1,4 +1,12 @@
 if [ -z "$PYTHONMODEL" ]
 then
-      pip3 install tensorflow==2.2.0
+    echo "R Model"
+else
+    echo "Installing Python Requirements"
+    pip3 install --progress-bar off tensorflow==2.2.0
+    hdfs dfs -copyToLocal $STORAGE/datalake/data/sentiment/models.tgz
+    mkdir models
+    cp models.tgz models/
+    cd models && tar xjvf models.tgz
+    cd ../
 fi

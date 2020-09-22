@@ -11,14 +11,14 @@ trunc_type='post'
 padding_type='post'
 
 
-#args = {"sent":"I've had a long day"}
+#args = {"sentence":"I've had a long day"}
 
 def predict_sentiment(args):
-  sent = args["sent"]
+  sent = args["sentence"]
   sent = np.array([sent])
   
   #Load the previously built Tokenizer
-  with open('sentiment_models/sentiment140_tokenizer.pickle', 'rb') as handle:
+  with open('models/sentiment140_tokenizer.pickle', 'rb') as handle:
     loaded_tokenizer = pickle.load(handle)
 
   #Pad sequences
@@ -27,7 +27,7 @@ def predict_sentiment(args):
   test_example = padded
   
   #Load Model
-  model = tf.keras.models.load_model("sentiment_models/model_conv1D_LSTM_with_batch_100_epochs.h5")
+  model = tf.keras.models.load_model("models/model_conv1D_LSTM_with_batch_100_epochs.h5")
   pred_conf = model.predict(test_example)
   pred_class = (model.predict(test_example) > 0.5).astype("int32")
   
@@ -37,7 +37,6 @@ def predict_sentiment(args):
   else:
     sentiment = 'Positive'
   conf = pred_conf[0][np.argmax(pred_conf)] * 100
-  percentage_conf = round(conf, 2)
   #return {"sent": sentiment, "confidence": str(pred_conf[0][np.argmax(pred_conf)] * 100)+' %'}
-  return {"sentiment": sentiment, "confidence": str(percentage_conf)+' %'}
+  return {"sentiment": sentiment, "confidence": round(conf, 3) }
   
