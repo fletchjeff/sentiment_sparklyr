@@ -31,7 +31,9 @@ def predict(args):
   #result.prediction
   if result.prediction==0:
     sentiment = 'Negative'
+    conf = round(result.probability[0] * 100,3)
   else:
     sentiment = 'Positive'  
-  return {"sentiment" : sentiment, "confidence" : round(result.probability[0],3) }
+    conf = round(result.probability[1] * 100,3)
+  return {"sentiment" : sentiment, "confidence" : conf }
 

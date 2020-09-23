@@ -1,10 +1,11 @@
-install.packages("tidyverse")
+# This file does the same thing as the 0_bootstrap.py file in the home director of this project. This is here in R so that you
+# use parts of this code in other CDSW/CML projects if needed. 
+
 install.packages("dplyr")
 install.packages("tibble")
 install.packages("sparklyr")
 library(xml2)
 library(httr)
-
 
 HOST <- paste(strsplit(Sys.getenv("CDSW_API_URL"),"/")[[1]][1],"//",Sys.getenv("CDSW_DOMAIN"),sep="")
 USERNAME <- strsplit(Sys.getenv("CDSW_PROJECT_URL"),"/")[[1]][7]
@@ -36,5 +37,4 @@ system(paste("hdfs dfs -mkdir ",storage,"/datalake",sep=""))
 system(paste("hdfs dfs -mkdir ",storage,"/datalake/data",sep=""))
 system(paste("hdfs dfs -mkdir ",storage,"/datalake/data/sentiment",sep=""))
 system(paste("hdfs dfs -copyFromLocal simpsons_dataset.csv ",storage,"/datalake/data/sentiment/simpsons_dataset.csv",sep=""))
-system("wget -nc https://raw.githubusercontent.com/laugustyniak/textlytics/master/textlytics/data/lexicons/AFINN-en-165.txt")
 system(paste("hdfs dfs -copyFromLocal AFINN-en-165.txt ",storage,"/datalake/data/sentiment/AFINN-en-165.txt",sep=""))

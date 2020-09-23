@@ -1,0 +1,184 @@
+---
+title: "Who is the happiest Simpsons Character?"
+output: html_notebook
+---
+This R Notebook will show one way for working out which of the Simpsons characters is the happiest based on analysing the sentiment of their dialogue from the show. This is more about showing the process than being as accurate as possible, but going through the list at the end, I'm happy with the outcome. 
+
+![Proffesor Frink](/home/cdsw/images/265282.jpg)
+
+source https://toddwschneider.com/posts/the-simpsons-by-the-data/
+
+The dataset for this comes from kaggle and you can see it  here: https://www.kaggle.com/pierremegret/dialogue-lines-of-the-simpsons
+The dataset is quite small and it has been included with the repo. Make sure you have run the 0_bootstrap.py script at the start to upload the data to the object storage and to set the `STORAGE` envrionment variable. 
+
+This project uses the `dplyr`, `sparklyr`, and `ggplot2` packages. There is a weird issue with CRAN and installing `sparklyr` at the moment, so if you install things in the following order, it will work.
+```
+install.packages("dplyr")
+install.packages("tibble")
+install.packages("sparklyr")
+install.packages("ggplot2")
+```
+
+#### Load the libraries
+```{r}
+library(sparklyr)
+library(dplyr)
+library(ggplot2)
+```
+
+#### Create the Spark connection
+```{r}
+storage <- Sys.getenv("STORAGE")
+
+config <- spark_config()
+config$spark.executor.memory <- "4g"
+config$spark.executor.instances <- "3"
+config$spark.executor.cores <- "4"
+config$spark.driver.memory <- "2g"
+config$spark.yarn.access.hadoopFileSystems <- storage
+sc <- spark_connect(master = "yarn-client", config=config)
+```
+### Read in the CSV data
+The text data is a very simple dataset. Its 2 columns, one for the character, and on for their
+dialog. Since we know that its 2 columns of `characters` we will set the schema and save
+spark the trouble of doing it automatically.
+
+```
+Miss Hoover,"No, actually, it was a little of both. Sometimes when a disease is in all he magazines and all the news shows, it's nly natural that you think you have it."
+Lisa Simpson,Where's Mr. Bergstrom?
+Miss Hoover,I don't know. Although I'd sure like to talk to him. He didn't touch my lesson plan. What did he teach you?
+Lisa Simpson,That life is worth living.
+```
+```{r}
+cols = list(
+  raw_character_text = "character",
+  spoken_words = "character"
+)
+
+spark_read_csv(
+  sc,
+  name = "simpsons_spark_table",
+  path = paste(storage,"/datalake/data/sentiment/simpsons_dataset.csv",sep=""),
+  infer_schema = FALSE,
+  columns = cols,
+  header = TRUE
+)
+
+```
+
+The other dataset we will use is the AFINN list. https://github.com/fnielsen/afinn/tree/master/afinn/data 
+its 2 column, the first being the word and the second and integer value for its `valance`. 
+
+```
+abandon	-2
+abandoned	-2
+abandons	-2
+abducted	-2
+```
+```{r}
+spark_read_csv(
+  sc,
+  name = "afinn_table",
+  path = paste(storage,"/datalake/data/sentiment/AFINN-en-165.txt",sep=""),
+  infer_schema = TRUE,
+  delimiter = ",",
+  header = FALSE
+)
+```
+#### Create local references for the Spark tables.
+
+```{r}
+afinn_table <- tbl(sc, "afinn_table")
+afinn_table <- afinn_table %>% rename(word = V1, value = V2)
+
+simpsons_spark_table <- tbl(sc, "simpsons_spark_table")
+
+as.data.frame(head(simpsons_spark_table))
+  
+simpsons_spark_table %>% count()
+```
+#### Basic data cleaning
+
+Renaming a column
+```{r}
+simpsons_spark_table <- 
+  simpsons_spark_table %>% 
+  rename(raw_char = raw_character_text)
+```
+Droping null / NA values
+```{r}
+simpsons_spark_table <- 
+  simpsons_spark_table %>% 
+  na.omit()
+```
+#### Show the changes
+```{r}
+simpsons_spark_table %>% group_by(raw_char) %>% count() %>% arrange(desc(n))
+```
+## Text Mining
+https://spark.rstudio.com/guides/textmining/
+
+
+#### Remove punctuation
+ * mutate can use python.
+```{r}
+simpsons_spark_table <- 
+  simpsons_spark_table %>% 
+  mutate(spoken_words = regexp_replace(spoken_words, "\'", "")) %>%
+  mutate(spoken_words = regexp_replace(spoken_words, "[_\"():;,.!?\\-]", " "))
+```
+#### Tokenize
+```{r}
+simpsons_spark_table <- 
+  simpsons_spark_table %>% 
+  ft_tokenizer(input_col="spoken_words",output_col= "word_list")
+```
+#### Remove stop words
+```{r}
+simpsons_spark_table <- 
+  simpsons_spark_table %>% 
+  ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
+```
+#### Explode that word lists into a single column of word by characters
+```{r}
+simpsons_final_words <- simpsons_spark_table %>%  mutate(word = explode(wo_stop_words)) %>%
+  select(word, raw_char) %>%
+  filter(nchar(word) > 2) %>%
+  compute("simpsons_spark_table")
+```
+#### Find the top 30 characters by number of words.
+```{r}
+top_chars <- simpsons_final_words %>% 
+  group_by(raw_char) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head(30) %>% 
+  as.data.frame()
+
+top_chars <- as.vector(top_chars$raw_char)
+```
+## Sentiment Analysis
+This is simply taking the AFINN word list and joining it with the words by character
+list. The AFINN value is summed and then weighted according to number of words spoken.
+```{r}
+happiest_characters <- simpsons_final_words %>% 
+  filter(raw_char %in% top_chars) %>%
+  inner_join(afinn_table) %>% 
+  group_by(raw_char) %>% 
+  summarise(weighted_sum = sum(value)/count()) %>%
+  arrange(desc(weighted_sum)) %>% 
+  as.data.frame()
+```
+
+```{r}
+happiest_characters
+```
+
+```{r}
+p <-
+  ggplot(happiest_characters, aes(reorder(raw_char,weighted_sum), weighted_sum))+
+  geom_col(width = 0.7) + 
+  coord_flip()
+p
+```
+
