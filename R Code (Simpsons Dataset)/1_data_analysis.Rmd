@@ -17,6 +17,7 @@ install.packages("dplyr")
 install.packages("tibble")
 install.packages("sparklyr")
 install.packages("ggplot2")
+install.packages("ggthemes")
 ```
 
 #### Load the libraries
@@ -24,6 +25,7 @@ install.packages("ggplot2")
 library(sparklyr)
 library(dplyr)
 library(ggplot2)
+library(ggthemes)
 ```
 
 #### Create the Spark connection
@@ -146,6 +148,13 @@ simpsons_final_words <- simpsons_spark_table %>%  mutate(word = explode(wo_stop_
   filter(nchar(word) > 2) %>%
   compute("simpsons_spark_table")
 ```
+
+#### Write these to Hive to use later
+```{r}
+spark_write_table(simpsons_spark_table,"simpsons_spark_table",mode = "overwrite")
+spark_write_table(afinn_table,"afinn_table",mode = "overwrite")
+```
+
 #### Find the top 30 characters by number of words.
 ```{r}
 top_chars <- simpsons_final_words %>% 
@@ -177,7 +186,9 @@ happiest_characters
 ```{r}
 p <-
   ggplot(happiest_characters, aes(reorder(raw_char,weighted_sum), weighted_sum))+
-  geom_col(width = 0.7) + 
+  theme_tufte(base_size=14, ticks=F) + 
+  geom_col(width=0.75, fill = "grey") +
+  theme(axis.title=element_blank()) +
   coord_flip()
 p
 ```

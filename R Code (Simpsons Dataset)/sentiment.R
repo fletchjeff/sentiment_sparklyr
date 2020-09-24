@@ -1,15 +1,29 @@
 ## Creating a Linear Model using word2vec
 
+library(sparklyr)
+library(dplyr)
+
+storage <- Sys.getenv("STORAGE")
+
+config <- spark_config()
+config$spark.executor.memory <- "4g"
+config$spark.executor.instances <- "3"
+config$spark.executor.cores <- "4"
+config$spark.driver.memory <- "2g"
+config$spark.yarn.access.hadoopFileSystems <- storage
+sc <- spark_connect(master = "yarn-client", config=config)
+
+spark_read_table(sc,"simpsons_spark_table")
+
+# Why do we need this?
+simpsons_spark_table <- tbl(sc, "simpsons_spark_table")
+afinn_table <- tbl(sc, "afinn_table")
+
 sentences <- simpsons_spark_table %>%  
   mutate(word = explode(wo_stop_words)) %>% 
   select(spoken_words, word) %>%  
   filter(nchar(word) > 2) %>% 
   compute("simpsons_spark_table")
-
-#sentence_values <- sentences %>% 
-#  inner_join(afinn_table) %>% 
-#  group_by(spoken_words) %>% 
-#  summarise(weighted_sum = sum(value)/count())
 
 sentence_values <- sentences %>% 
   inner_join(afinn_table) %>% 
