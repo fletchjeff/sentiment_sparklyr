@@ -94,8 +94,8 @@ notebook code will execute and create the tables needed in the next step.
 ![rstudio run code](images/run_notebook.png)
 
 
-### 2 Model Building (R Code)
-This is a Jupyter Notebook that does some basic data exploration and visualistaion. It 
+### 2 Model Training (R Code)
+<!-- This is a Jupyter Notebook that does some basic data exploration and visualistaion. It 
 is to show how this would be part of the data science workflow.
 
 ![data](https://raw.githubusercontent.com/fletchjeff/cml_churn_demo_mlops/master/images/data.png)
@@ -103,19 +103,8 @@ is to show how this would be part of the data science workflow.
 Open a Jupyter Notebook session (rather than a work bench): python3, 1 CPU, 2 GB and 
 open the `2_data_exploration.ipynb` file. 
 
-At the top of the page click **Cells > Run All**.
+At the top of the page click **Cells > Run All**. -->
 
-### 3 Model Building
-This is also a Jupyter Notebook to show the process of selecting and building the model 
-to predict churn. It also shows more details on how the LIME model is created and a bit 
-more on what LIME is actually doing.
-
-Open a Jupyter Notebook session (rather than a work bench): python3, 1 CPU, 2 GB and 
-open the `	3_model_building.ipynb` file. 
-
-At the top of the page click **Cells > Run All**.
-
-### 4 Model Training
 A model pre-trained is saved with the repo has been and placed in the `models` directory. 
 If you want to retrain the model, open the `4_train_models.py` file in a workbench  session: 
 python3 1 vCPU, 2 GiB and run the file. The newly model will be saved in the models directory 
@@ -123,7 +112,7 @@ named `telco_linear`.
 
 The other ways of running the model training process is by running a job. 
 
-***1. Jobs***
+***Jobs***
 
 The **[Jobs](https://docs.cloudera.com/machine-learning/cloud/jobs-pipelines/topics/ml-creating-a-job.html)**
 feature allows for adhoc, recurring and depend jobs to run specific scripts. To run this model 
@@ -138,8 +127,16 @@ New Job_ and entering the following settings:
 The rest can be left as is. Once the job has been created, click **Run** to start a manual 
 run for that job.
 
+### 3 Model Serving (R Code)
+<!-- This is also a Jupyter Notebook to show the process of selecting and building the model 
+to predict churn. It also shows more details on how the LIME model is created and a bit 
+more on what LIME is actually doing.
 
-### 5 Serve Model
+Open a Jupyter Notebook session (rather than a work bench): python3, 1 CPU, 2 GB and 
+open the `	3_model_building.ipynb` file. 
+
+At the top of the page click **Cells > Run All**. -->
+
 The **[Models](https://docs.cloudera.com/machine-learning/cloud/models/topics/ml-creating-and-deploying-a-model.html)** 
 is used top deploy a machine learning model into production for real-time prediction. To 
 deploy the model trailed in the previous step, from  to the Project page, click **Models > New
@@ -152,29 +149,11 @@ Model** and create a new model with the following details:
 * **Input**: 
 ```
 {
-	"StreamingTV": "No",
-	"MonthlyCharges": 70.35,
-	"PhoneService": "No",
-	"PaperlessBilling": "No",
-	"Partner": "No",
-	"OnlineBackup": "No",
-	"gender": "Female",
-	"Contract": "Month-to-month",
-	"TotalCharges": 1397.475,
-	"StreamingMovies": "No",
-	"DeviceProtection": "No",
-	"PaymentMethod": "Bank transfer (automatic)",
-	"tenure": 29,
-	"Dependents": "No",
-	"OnlineSecurity": "No",
-	"MultipleLines": "No",
-	"InternetService": "DSL",
-	"SeniorCitizen": "No",
-	"TechSupport": "No"
+	"sentence": "I have had a fantastic day",
 }
 ```
-* **Kernel**: Python 3
-* **Engine Profile**: 1vCPU / 2 GiB Memory
+* **Kernel**: R
+* **Engine Profile**: 1vCPU / 4 GiB Memory
 
 Leave the rest unchanged. Click **Deploy Model** and the model will go through the build 
 process and deploy a REST endpoint. Once the model is deployed, you can test it is working 
@@ -187,13 +166,38 @@ Once the model is deployed, you must disable the additional model authentication
 ![disable_auth](images/disable_auth.png)
 
 ## *For the Python code models:*
+### 1 Data Injest (Python Code)
 
+### 2 Model Training (Python Code)
+A model pre-trained is saved with the repo has been and placed in the `models` directory. 
+If you want to retrain the model, open the `4_train_models.py` file in a workbench  session: 
+python3 1 vCPU, 2 GiB and run the file. The newly model will be saved in the models directory 
+named `telco_linear`. 
 
+The other ways of running the model training process is by running a job. 
 
+***Jobs***
 
+The **[Jobs](https://docs.cloudera.com/machine-learning/cloud/jobs-pipelines/topics/ml-creating-a-job.html)**
+feature allows for adhoc, recurring and depend jobs to run specific scripts. To run this model 
+training process as a job, create a new job by going to the Project window and clicking _Jobs >
+New Job_ and entering the following settings:
+* **Name** : Train Mdoel
+* **Script** : 4_train_models.py
+* **Arguments** : _Leave blank_
+* **Kernel** : Python 3
+* **Schedule** : Manual
+* **Engine Profile** : 1 vCPU / 2 GiB
+The rest can be left as is. Once the job has been created, click **Run** to start a manual 
+run for that job.
 
+### 3 Data Analysis and Model Training Notebook (Python Code)
 
-### 4 Deploy Application
+### 4 Model Serving (Python Code)
+
+## *For both the R code and Python code models:*
+
+### 5 Deploy Application
 The next step is to deploy the Flask application. The **[Applications](https://docs.cloudera.com/machine-learning/cloud/applications/topics/ml-applications.html)** feature is still quite new for CML. For this project it is used to deploy a web based application that interacts with the underlying model created in the previous step.
 
 _**Note: This next step is important**_
@@ -205,6 +209,15 @@ _From the Project level click on "Open Workbench" (note you don't actually have 
 session) in order to edit a file. Select the flask/single_view.html file and paste the Access 
 Key in at line 19._
 
+```
+fetch_result <- function (sentence, model) {
+  if (model == "simp") {
+    accessKey <-  "mfd0yk8o4tfi13uua8hc9gzqxej0jc2s"
+  }
+  else {
+    accessKey <-  "m7zzyhlbtr3ovq3tvaa2myowglhzpf3f"
+  }
+```
 `        const accessKey = "mp3ebluylxh4yn5h9xurh1r0430y76ca";`
 
 _Save the file (if it has not auto saved already) and go back to the Project._
