@@ -30,7 +30,7 @@ batch_size = 16000
 def build_corpus():
   num_sentences = 0
   corpus = []
-  with open("pyFunc_tests/sentiment140_unzipped/clean_data.csv") as csvfile:
+  with open("temp_data/sentiment140_unzipped/clean_data.csv") as csvfile:
     reader = csv.reader(csvfile, delimiter=',')
     for row in reader:
       text_and_label=[]
@@ -86,7 +86,7 @@ def tokenize_and_pad():
   print("Validation Labels Count: " + str(len(test_labels)))
 
 # saving the Tokenizer
-  with open('pyFunc_tests/models/test_tokenizer.pickle', 'wb') as handle:
+  with open('temp_data/models/test_tokenizer.pickle', 'wb') as handle:
     pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
   return training_sequences, training_labels, test_sequences, test_labels, word_index, vocab_size
@@ -95,10 +95,10 @@ def embed_data(vocab_size, word_index):
   url = 'http://nlp.stanford.edu/data/glove.6B.zip'
   with urlopen(url) as response:
     with ZipFile(BytesIO(response.read())) as zfile:
-      zfile.extractall('pyFunc_tests/embeddings/glove_6B')
+      zfile.extractall('temp_data/embeddings/glove_6B')
 
   embedding_dict = {};
-  with open('pyFunc_tests/embeddings/glove_6B/glove.6B.100d.txt') as f:
+  with open('temp_data/embeddings/glove_6B/glove.6B.100d.txt') as f:
     for item in f:
       embed_items = item.split();
       word = embed_items[0];
@@ -136,7 +136,7 @@ def train_model(vocab_size, embedding_matrix, training_sequences, training_label
   history = model.fit(np.array(training_sequences), np.array(training_labels), batch_size=batch_size, epochs=num_epochs, validation_data=(np.array(test_sequences), np.array(test_labels)), verbose=2)
   
   ##Save the model
-  model.save('pyFunc_tests/models/test_model.h5')
+  model.save('temp_data/models/test_model.h5')
   return model, history
 
 def plot_model(vocab_size, embedding_matrix, training_sequences, training_labels, batch_size, num_epochs, test_sequences, test_labels):

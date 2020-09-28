@@ -61,6 +61,7 @@ except:
 
 # Unpack nad move the models into the right directory
 !mkdir /home/cdsw/models
+!mkdir /home/cdsw/temp_data
 !cp /home/cdsw/models.tgz /home/cdsw/models/
 !cd /home/cdsw/models && tar xjvf models.tgz
 !rm /home/cdsw/models/models.tgz
