@@ -1,7 +1,7 @@
 if [ -z "$PYTHONMODEL" ]
 then
     echo "R Model"
-    Rscript "/home/cdsw/R Code (Simpsons Dataset)/install.R"
+    Rscript "/home/cdsw/R Code (Simpsons Dataset)/0_install.R"
 else
     echo "Installing Python Requirements"
     pip3 install --progress-bar off tensorflow==2.2.0

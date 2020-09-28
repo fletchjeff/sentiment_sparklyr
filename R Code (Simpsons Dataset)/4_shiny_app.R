@@ -4,13 +4,13 @@ library(httr)
 
 fetch_result <- function (sentence, model) {
   if (model == "simp") {
-    accessKey <-  "mzn85fzd9u9g9jhgq2evvbxbqody8w1b"
+    accessKey <-  "mfd0yk8o4tfi13uua8hc9gzqxej0jc2s"
   }
   else {
-    accessKey <-  "mj8hzqlabyjxlqbiwefqiuldbqdngmuw"
+    accessKey <-  "m7zzyhlbtr3ovq3tvaa2myowglhzpf3f"
   }
   result <- POST(
-    "https://modelservice.ml-c9056e76-593.se-sandb.a465-9q4k.cloudera.site/model",
+    paste("https://modelservice.", Sys.getenv("CDSW_DOMAIN"), "/model", sep=""),
     body = paste('{"accessKey":"',accessKey,'","request":{"sentence":"',sentence,'"}} ',sep = ""),
     add_headers("Content-Type" = "application/json")
   )

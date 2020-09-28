@@ -13,7 +13,8 @@
 !pip3 install git+https://github.com/fastforwardlabs/cmlbootstrap#egg=cmlbootstrap
 
 # Install the requirements for R
-!Rscript "R Code (Simpsons Dataset)/install.R"
+!R -e 'print("Test")'
+!Rscript "R Code (Simpsons Dataset)/0_install.R"
 
 # Create the directories and upload data
 

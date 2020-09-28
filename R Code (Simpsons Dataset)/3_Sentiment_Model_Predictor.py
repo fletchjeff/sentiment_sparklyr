@@ -20,7 +20,7 @@ lr_model = PipelineModel.load(s3_bucket + "/datalake/data/sentiment/lr_model")
 
 #args = {"sentence":"I'm no dunce, I was born an oaf and I'll die an oaf"}
 
-def predict(args):
+def predict_sentiment(args):
   input_sentence = args["sentence"]#.split(",")
   sentence_df = spark.createDataFrame([(input_sentence,)],['spoken_words'])
   sentence_df = sentence_df.select(regexp_replace('spoken_words',r'[_\"\'():;,.!?\\-]', ' ').alias('spoken_words'))
