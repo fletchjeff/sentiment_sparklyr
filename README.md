@@ -74,7 +74,10 @@ image below:
 
 ![engines](images/adding_engines.png)
 
+The next step after adding the engine is to configure R-Studio as an editor.
+In the **Admin > Engines** section, click **Edit** and add in command to launch R  Studio `/usr/local/bin/rstudio-cdsw`
 
+![rstudio-editor](images/)
 
 ### 0 Package Installation (R)
 This script will read in the data csv from the file uploaded to the object store (s3/adls) setup 
@@ -175,6 +178,10 @@ Once the model is deployed, you must disable the additional model authentication
 ![disable_auth](images/disable_auth.png)
 
 ## *For the Python code models:*
+
+
+
+
 
 
 ### 4 Deploy Application
