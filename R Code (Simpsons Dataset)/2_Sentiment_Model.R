@@ -44,35 +44,40 @@ sentence_values_tokenized <-
   ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 
-#w2v_model <- ft_word2vec(sc, 
-#                         input_col = "wo_stop_words", 
-#                         output_col = "result", 
-#                         min_count = 5,
-#                         max_iter = 25,
-#                         vector_size = 400,
-#                         step_size = 0.0125
-#                        )
+### Saving the model
 
-#w2v_model_fitted <- ml_fit(w2v_model,sentence_values_tokenized)
+# _Note:_ If your model has already been saved, you can bypass this process by commenting out the following code:
+# _Comment from here:
+# ============
+w2v_model <- ft_word2vec(sc,
+                        input_col = "wo_stop_words",
+                        output_col = "result",
+                        min_count = 5,
+                        max_iter = 25,
+                        vector_size = 400,
+                        step_size = 0.0125
+                       )
 
-#ml_save(
-#   w2v_model_fitted,
-#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep=""),
-#   overwrite = TRUE
-#)
+w2v_model_fitted <- ml_fit(w2v_model,sentence_values_tokenized)
+
+ml_save(
+  w2v_model_fitted,
+  paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep=""),
+  overwrite = TRUE
+)
+# =============
+# _to here.
+# 
+# And uncomment the lines below from:
+# ==============
 
 w2v_model_fitted <- ml_load(
   sc, 
   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep="")
 )
-
-
-#ml_find_synonyms(w2v_model_fitted,"doh",2)
+# ==============
 
 w2v_transformed <- ml_transform(w2v_model_fitted, sentence_values_tokenized)
-
-#w2v_transformed <- w2v_transformed %>% mutate(sent_score = ifelse(weighted_sum>mean,1,0))
-
 
 w2v_transformed_split <- w2v_transformed %>% sdf_random_split(training=0.7, test = 0.3)
 
@@ -114,20 +119,3 @@ ml_binary_classification_evaluator(pred_lr_training,label_col = "sent_score",
 
 ml_binary_classification_evaluator(pred_lr_test,label_col = "sent_score",
                         prediction_col = "prediction", metric_name = "areaUnderROC")
-
-## Creating a reusable model pipeline.
-
-#sentiment_pipeline <- ml_pipeline(sc) %>%
-#  ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
-#  ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words") %>%
-#  ft_word2vec(input_col = "wo_stop_words", output_col = "result", min_count = 10) %>%
-#  ft_r_formula(sent_score ~ result) %>% 
-#  ml_linear_regression()
-#
-#sentiment_model <- ml_fit(sentiment_pipeline,sentence_values)
-#
-#ml_save(
-#   sentiment_model,
-#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/sentiment_model_r",sep=""),
-#   overwrite = TRUE
-#)

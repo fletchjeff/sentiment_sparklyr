@@ -22,15 +22,15 @@ fetch_result <- function (sentence, model) {
 
 
 app <- shinyApp(ui <- fluidPage(
-  titlePanel("Sentiment Analysis Model Test Application"),
+  titlePanel("Sentiment Analysis Model Application"),
   
   sidebarLayout(
     sidebarPanel(
       textAreaInput( 
-        "caption", "Test Sentence", "I'm no dunce, I was born an oaf and I'll die an oaf"
+        "caption", "Test Sentence", "I have had a bad day"
       ),
       radioButtons(
-        "model", "Choose model:", c("Simpsons Spark" = "simp", "Deep Learning" = "dl")
+        "model", "Choose model:", c("Sparklyr" = "simp", "Tensorflow" = "dl")
       ),
       submitButton("Get Sentiment", icon("arrow-right"))
     ),

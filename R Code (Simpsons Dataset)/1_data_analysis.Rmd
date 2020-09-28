@@ -4,7 +4,7 @@ output: html_notebook
 ---
 This R Notebook will show one way for working out which of the Simpsons characters is the happiest based on analysing the sentiment of their dialogue from the show. This is more about showing the process than being as accurate as possible, but going through the list at the end, I'm happy with the outcome. 
 
-![Proffesor Frink](/home/cdsw/images/265282.jpg)
+![Proffesor Frink](/home/cdsw/images/frink.jpg)
 
 source https://toddwschneider.com/posts/the-simpsons-by-the-data/
 

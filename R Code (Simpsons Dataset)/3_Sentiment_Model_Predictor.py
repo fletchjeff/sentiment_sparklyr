@@ -11,12 +11,12 @@ spark = SparkSession.builder \
       .config("spark.hadoop.yarn.resourcemanager.principal",os.getenv("HADOOP_USER_NAME"))\
       .getOrCreate()
 
-s3_bucket = os.getenv("STORAGE")      
+storage = os.getenv("STORAGE")      
 
 tokenizer = Tokenizer(inputCol="spoken_words", outputCol="word_list")
 remover = StopWordsRemover(inputCol="word_list", outputCol="wo_stop_words")
-w2v_model_fitted = Word2VecModel.load(s3_bucket + "/datalake/data/sentiment/w2v_model_fitted")
-lr_model = PipelineModel.load(s3_bucket + "/datalake/data/sentiment/lr_model")
+w2v_model_fitted = Word2VecModel.load(storage + "/datalake/data/sentiment/w2v_model_fitted")
+lr_model = PipelineModel.load(storage + "/datalake/data/sentiment/lr_model")
 
 #args = {"sentence":"I'm no dunce, I was born an oaf and I'll die an oaf"}
 
