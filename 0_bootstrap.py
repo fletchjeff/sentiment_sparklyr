@@ -30,7 +30,7 @@ import xml.etree.ElementTree as ET
 HOST = os.getenv("CDSW_API_URL").split(
     ":")[0] + "://" + os.getenv("CDSW_DOMAIN")
 USERNAME = os.getenv("CDSW_PROJECT_URL").split(
-    "/")[6]  # args.username  # "vdibia"
+    "/")[6]  
 API_KEY = os.getenv("CDSW_API_KEY") 
 PROJECT_NAME = os.getenv("CDSW_PROJECT")  
 
