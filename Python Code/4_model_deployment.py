@@ -34,9 +34,10 @@ def predict_sentiment(args):
   #print("%s sentiment; %f%% confidence" % (pred_class[0][0], pred_conf[0][np.argmax(pred_conf)] * 100))
   if pred_class[0][0]==0:
     sentiment = 'Negative'
+    conf = 100 - pred_conf[0][np.argmax(pred_conf)] * 100
   else:
     sentiment = 'Positive'
-  conf = pred_conf[0][np.argmax(pred_conf)] * 100
+    conf = pred_conf[0][np.argmax(pred_conf)] * 100
   #return {"sent": sentiment, "confidence": str(pred_conf[0][np.argmax(pred_conf)] * 100)+' %'}
   return {"sentiment": sentiment, "confidence": round(conf, 3) }
   
