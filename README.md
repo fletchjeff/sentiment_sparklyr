@@ -32,7 +32,7 @@ We trust that you are familiar with typical data science workflows
 and do not need detailed explanations of the code. Notes that are *specific to CML* will be e
 mphasized in **block quotes**.
 
-_**For both the R code and Python code models:**_
+## *For both the R code and Python code models:*
 ### Initialize the Project
 There are a couple of steps needed at the start to configure the Project and Workspace 
 settings so each step will run sucessfully. You **must** run the project bootstrap 
@@ -57,19 +57,28 @@ downloaded and created as part of the process.
 
 
 ## Project Build
-If you want go through each of the steps manually to build and understand how the project 
-works, follow the steps below. There is a lot more detail and explanation/comments in each 
+To build out the complete project, you need to go through each of the steps manually to build 
+and understand how the project works. There is more detail and explanation/comments in each 
 of the files/notebooks so its worth looking into those. Follow the steps below and you 
 will end up with a running application.
 
-### 0 Bootstrap
-Just to reiterate that you have run the bootstrap for this project before anything else. 
-So make sure you run step 0 first. 
+## *For the R code models:*
+**Engine Setup**
+For those who are more comfortable running R-Studio as the text editor, or if you want to see
+how the R notebook file renders, you need to setup R-Studio as a [web based editor](https://docs.cloudera.com/machine-learning/cloud/projects/topics/ml-editors-browser-engine.html). The process 
+fairly straight forward, and for you now you can use an engine that has been uploaded to docker
+hub to make this easier: `splonge/cml:2020.07-rstudio` but you can follow the documented process
+and upload the resulting engine image to any accessable docker repo. To add the engine, you will
+need admin access to CML. In the **Admin > Engines** section, add a new engine as the per the 
+image below:
 
-Open the file `0_bootstrap.py` in a normal workbench python3 session. You only need a 
-1 CPU / 2 GB instance. Then **Run > Run All Lines**
+![engines](images/adding_engines.png)
 
-### 1 Ingest Data
+
+
+
+
+### 0 Package Installation (R)
 This script will read in the data csv from the file uploaded to the object store (s3/adls) setup 
 during the bootstrap and create a managed table in Hive. This is all done using Spark.
 
@@ -102,7 +111,7 @@ If you want to retrain the model, open the `4_train_models.py` file in a workben
 python3 1 vCPU, 2 GiB and run the file. The newly model will be saved in the models directory 
 named `telco_linear`. 
 
-There are 2 other ways of running the model training process
+The other ways of running the model training process is by running a job. 
 
 ***1. Jobs***
 
@@ -118,20 +127,6 @@ New Job_ and entering the following settings:
 * **Engine Profile** : 1 vCPU / 2 GiB
 The rest can be left as is. Once the job has been created, click **Run** to start a manual 
 run for that job.
-
-***2. Experiments***
-
-The other option is running an **[Experiment](https://docs.cloudera.com/machine-learning/cloud/experiments/topics/ml-running-an-experiment.html)**. Experiments run immediately and are used for testing different parameters in a model training process. In this instance it would be use for hyperparameter optimisation. To run an experiment, from the Project window click Experiments > Run Experiment with the following settings.
-* **Script** : 4_train_models.py
-* **Arguments** : 5 lbfgs 100 _(these the cv, solver and max_iter parameters to be passed to 
-LogisticRegressionCV() function)
-* **Kernel** : Python 3
-* **Engine Profile** : 1 vCPU / 2 GiB
-
-Click **Start Run** and the expriment will be sheduled to build and run. Once the Run is 
-completed you can view the outputs that are tracked with the experiment using the 
-`cdsw.track_metrics` function. It's worth reading through the code to get a sense of what 
-all is going on.
 
 
 ### 5 Serve Model
@@ -181,7 +176,10 @@ Once the model is deployed, you must disable the additional model authentication
 
 ![disable_auth](images/disable_auth.png)
 
-### 6 Deploy Application
+## *For the Python code models:*
+
+
+### 4 Deploy Application
 The next step is to deploy the Flask application. The **[Applications](https://docs.cloudera.com/machine-learning/cloud/applications/topics/ml-applications.html)** feature is still quite new for CML. For this project it is used to deploy a web based application that interacts with the underlying model created in the previous step.
 
 _**Note: This next step is important**_
