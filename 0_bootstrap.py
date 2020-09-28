@@ -12,9 +12,9 @@
 !pip3 install --progress-bar off tensorflow==2.2.0
 !pip3 install git+https://github.com/fastforwardlabs/cmlbootstrap#egg=cmlbootstrap
 
-# Install the requirements for R
+# Install the requirements for R. 
 !R -e 'print("Test")'
-!Rscript "R Code (Simpsons Dataset)/0_install.R"
+!Rscript "R Code/0_install.R"
 
 # Create the directories and upload data
 

@@ -1,4 +1,4 @@
-# This is the installer used for installing the packages for the R code
+# This is used for installing the packages for the R code
 # based model. 
 install.packages("dplyr")
 install.packages("tibble")

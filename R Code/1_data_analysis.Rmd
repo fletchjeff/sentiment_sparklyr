@@ -144,13 +144,6 @@ simpsons_spark_table <-
   simpsons_spark_table %>% 
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 ```
-#### Explode that word lists into a single column of word by characters
-```{r}
-simpsons_final_words <- simpsons_spark_table %>%  mutate(word = explode(wo_stop_words)) %>%
-  select(word, raw_char) %>%
-  filter(nchar(word) > 2) %>%
-  compute("simpsons_spark_table")
-```
 
 #### Write these to Hive to use later
 ```{r}
@@ -158,8 +151,42 @@ spark_write_table(simpsons_spark_table,"simpsons_spark_table",mode = "overwrite"
 spark_write_table(afinn_table,"afinn_table",mode = "overwrite")
 ```
 
-#### Find the top 30 characters by number of words.
+
 ```{r}
+sentences <- simpsons_spark_table %>%  
+  mutate(word = explode(wo_stop_words)) %>% 
+  select(spoken_words, word) %>%  
+  filter(nchar(word) > 2) %>% 
+  compute("simpsons_spark_table")
+
+sentence_values <- sentences %>% 
+  inner_join(afinn_table) %>% 
+  group_by(spoken_words) %>% 
+  summarise(weighted_sum = sum(value))
+
+weighted_sum_summary <- sentence_values %>% sdf_describe(cols="weighted_sum")
+```
+
+```{r}
+weighted_sum_summary
+```
+
+```{r}
+density_plot <- function(X) {
+  hist(X, prob=TRUE, col="grey", breaks=500, xlim=c(-10,10), ylim=c(0,0.2))# prob=TRUE for probabilities not counts
+  lines(density(X), col="blue", lwd=2) # add a density estimate with defaults
+
+}
+density_plot(as.data.frame(sentence_values %>% select(weighted_sum))$weighted_sum)
+```
+
+#### Explode that word lists into a single column of word by characters, then find the top 30 characters by number of words.
+```{r}
+simpsons_final_words <- simpsons_spark_table %>%  mutate(word = explode(wo_stop_words)) %>%
+  select(word, raw_char) %>%
+  filter(nchar(word) > 2) %>%
+  compute("simpsons_spark_table")
+
 top_chars <- simpsons_final_words %>% 
   group_by(raw_char) %>% 
   count() %>% 

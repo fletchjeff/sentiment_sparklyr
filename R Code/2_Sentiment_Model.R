@@ -14,6 +14,7 @@ config$spark.yarn.access.hadoopFileSystems <- storage
 sc <- spark_connect(master = "yarn-client", config=config)
 
 spark_read_table(sc,"simpsons_spark_table")
+spark_read_table(sc,"afinn_table")
 
 # Why do we need this?
 simpsons_spark_table <- tbl(sc, "simpsons_spark_table")
@@ -44,10 +45,11 @@ sentence_values_tokenized <-
   ft_tokenizer(input_col="spoken_words",output_col= "word_list") %>%
   ft_stop_words_remover(input_col = "word_list", output_col = "wo_stop_words")
 
-### Saving the model
+
+### Creating a word2vec model
 
 # _Note:_ If your model has already been saved, you can bypass this process by commenting out the following code:
-# _Comment from here:
+# _Comment from here:_
 # ============
 w2v_model <- ft_word2vec(sc,
                         input_col = "wo_stop_words",
@@ -68,19 +70,23 @@ ml_save(
 # =============
 # _to here.
 # 
-# And uncomment the lines below from:
+# _And uncomment the lines below from:_
 # ==============
-
-w2v_model_fitted <- ml_load(
-  sc, 
-  paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep="")
-)
+# w2v_model_fitted <- ml_load(
+#   sc, 
+#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/w2v_model_fitted",sep="")
+# )
 # ==============
+# _to here._
 
 w2v_transformed <- ml_transform(w2v_model_fitted, sentence_values_tokenized)
 
 w2v_transformed_split <- w2v_transformed %>% sdf_random_split(training=0.7, test = 0.3)
 
+### Creating a Logistic Regression model
+# _Note:_ If your model has already been saved, you can bypass this process by commenting out the following code:
+# _Comment from here:_
+# ============
 lr_model <- w2v_transformed_split$training %>% select(result,sent_score) %>% 
   ml_logistic_regression(
     sent_score ~ result,
@@ -94,21 +100,17 @@ ml_save(
    paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lr_model",sep=""),
    overwrite = TRUE
 )
-
-lr_model <- ml_load(
-  sc, 
-  paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lr_model",sep="")
-)
-
-
-density_plot <- function(X) {
-  hist(X, prob=TRUE, col="grey", breaks=500, xlim=c(-10,10), ylim=c(0,0.2))# prob=TRUE for probabilities not counts
-  lines(density(X), col="blue", lwd=2) # add a density estimate with defaults
-  #lines(density(X, adjust=2), lty="dotted", col="darkgreen", lwd=2) 
-}
-
-density_plot(as.data.frame(w2v_transformed %>% select(weighted_sum))$weighted_sum)
-
+# =============
+# _to here.
+# 
+# _And uncomment the lines below from:_
+# ==============
+# lr_model <- ml_load(
+#   sc, 
+#   paste(Sys.getenv("STORAGE"),"/datalake/data/sentiment/lr_model",sep="")
+# )
+# ==============
+# _to here._
 
 pred_lr_training <- ml_predict(lr_model, w2v_transformed_split$training)
 

@@ -75,17 +75,26 @@ image below:
 ![engines](images/adding_engines.png)
 
 The next step after adding the engine is to configure R-Studio as an editor.
-In the **Admin > Engines** section, click **Edit** and add in command to launch R  Studio `/usr/local/bin/rstudio-cdsw`
+In the **Admin > Engines** section, click **Edit** on the newly added enging and add in the command to launch R  Studio `/usr/local/bin/rstudio-cdsw`
 
-![rstudio-editor](images/)
+![rstudio-editor](images/engine_editor_r.png)
 
-### 0 Package Installation (R)
-This script will read in the data csv from the file uploaded to the object store (s3/adls) setup 
-during the bootstrap and create a managed table in Hive. This is all done using Spark.
+### 1 Data Analysis (R Code)
+This file is an R notebook file that creates the datasets and hive tables necessary to train the
+model in the next step. To run this file, you need to open in an R-Studio session. In the **Project 
+Settings** section, change the project engine to the R-Studio engine created in the previous
+step.
 
-Open `1_data_ingest.py` in a Workbench session: python3, 1 CPU, 2 GB. Run the file.
+![project engine](images/project_engine.png)
 
-### 2 Explore Data
+Then launch a new R-Studio session with the R-Studio engine: 1 CPU, 4 GB. Then open the file 
+`R Code/1_data_analysis.Rmd`. In the file editor in R-Studio, click on **Run > Run All** and the 
+notebook code will execute and create the tables needed in the next step. 
+
+![rstudio run code](images/run_notebook.png)
+
+
+### 2 Model Building (R Code)
 This is a Jupyter Notebook that does some basic data exploration and visualistaion. It 
 is to show how this would be part of the data science workflow.
 
