@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import pickle
 import h5py
 
+!mkdir ~/temp_data/models/
+!mkdir ~/temp_data/embeddings/
 
 
 embedding_dim = 100
@@ -78,6 +80,7 @@ def tokenize_and_pad():
   training_sequences = padded_sent[split:training_size]
   test_labels = all_labels[0:split]
   training_labels = all_labels[split:training_size]
+  
   
   print("Vocabulary Size: " + str(vocab_size))
   print("Training data shape: " + str(training_sequences.shape))
@@ -199,4 +202,9 @@ print("Embedding Matrix Shape: " + str(embedding_matrix.shape))
 
 model = plot_model(vocab_size, embedding_matrix, training_sequences, training_labels, batch_size, num_epochs, test_sequences, test_labels)
 
+# saving model
+model.save('models/model_conv1D_LSTM_with_batch_100_epochs.h5')
+
+# saving tokenizer
+!cp /home/cdsw/temp_data/models/test_tokenizer.pickle /home/cdsw/models/sentiment140_tokenizer.pickle
 
