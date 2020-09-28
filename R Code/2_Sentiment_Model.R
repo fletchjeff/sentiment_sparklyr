@@ -33,9 +33,7 @@ sentence_values <- sentences %>%
 
 weighted_sum_summary <- sentence_values %>% sdf_describe(cols="weighted_sum")
 
-weighted_sum_summary
-
-weighted_sum_mean <- as.data.frame(weighted_sum_summary)[2,2]
+weighted_sum_mean <- as.data.frame(weighted_sum_summary)$weighted_sum[2]
 
 sentence_scores <- sentence_values %>% 
   mutate(sent_score = ifelse(weighted_sum > weighted_sum_mean,1,0))
