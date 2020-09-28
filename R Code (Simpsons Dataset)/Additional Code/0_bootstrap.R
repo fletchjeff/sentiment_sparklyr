@@ -4,6 +4,8 @@
 install.packages("dplyr")
 install.packages("tibble")
 install.packages("sparklyr")
+install.packages("ggthemes")
+
 library(xml2)
 library(httr)
 

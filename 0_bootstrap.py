@@ -13,7 +13,7 @@
 !pip3 install git+https://github.com/fastforwardlabs/cmlbootstrap#egg=cmlbootstrap
 
 # Install the requirements for R
-Rscript "R Code (Simpsons Dataset)install.R"
+!Rscript "R Code (Simpsons Dataset)/install.R"
 
 # Create the directories and upload data
 
@@ -59,6 +59,7 @@ except:
 !hdfs dfs -copyFromLocal /home/cdsw/data/* $STORAGE/datalake/data/sentiment/
 
 # Unpack nad move the models into the right directory
+!mkdir /home/cdsw/models
 !cp /home/cdsw/models.tgz /home/cdsw/models/
 !cd /home/cdsw/models && tar xjvf models.tgz
 !rm /home/cdsw/models/models.tgz
