@@ -58,6 +58,7 @@ except:
 !hdfs dfs -mkdir -p $STORAGE/datalake/data
 !hdfs dfs -mkdir -p $STORAGE/datalake/data/sentiment
 !hdfs dfs -copyFromLocal /home/cdsw/data/* $STORAGE/datalake/data/sentiment/
+!hdfs dfs -copyFromLocal /home/cdsw/models.tgz $STORAGE/datalake/data/sentiment/
 
 # Unpack nad move the models into the right directory
 !mkdir /home/cdsw/models

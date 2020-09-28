@@ -76,8 +76,6 @@ image below:
 
 
 
-
-
 ### 0 Package Installation (R)
 This script will read in the data csv from the file uploaded to the object store (s3/adls) setup 
 during the bootstrap and create a managed table in Hive. This is all done using Spark.
