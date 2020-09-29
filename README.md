@@ -12,14 +12,15 @@ Images Source: https://toddwschneider.com/posts/the-simpsons-by-the-data/
 This project builds two different Sentiment Analysis models. One model is based on text from 
 the Simpsons TV show available on Kaggle [here](https://www.kaggle.com/pierremegret/dialogue-lines-of-the-simpsons) 
 and uses **R code** (specifically [Sparklyr](https://spark.rstudio.com/)) to train the model. 
-The other model is based on the Sentiment 140 dataset, also available on kaggle [here](https://www.kaggle.com/kazanova/sentiment140) 
-and uses Tensorflow with GPU. The end result is an application that will send a test sentence 
-to either of the deployed models and show the predicted sentiment result.
+The other model is based on the Sentiment 140 dataset, also available on kaggle 
+[here](https://www.kaggle.com/kazanova/sentiment140) and uses **Python Code** (specifically
+[Tensorflow](https://tensorflow.org) with GPU). The end result is an application that will 
+send a test sentence to either of the deployed models and show the predicted sentiment result.
 
 ![table_view](images/app.png)
 
 The goal is to build a senitment classifier model using various techniques to predict the 
-senitment of a new sentence in real time.
+senitment of a new sentence, in real time.
 
 By following the notebooks and scripts in this project, you will understand how to perform similar 
 sentiment analysis tasks on CML as well as how to use the platform's major features to your 
@@ -27,64 +28,64 @@ advantage. These features include **working in different programing langues**,
 **using different engines**, **point-and-click model deployment**, and **ML app hosting**.
 
 We will focus our attention on working within CML, using all it has to offer, while glossing over 
-the details that are simply standard data science. 
-We trust that you are familiar with typical data science workflows
-and do not need detailed explanations of the code. Notes that are *specific to CML* will be e
-mphasized in **block quotes**.
+the details that are simply standard data science. We trust that you are familiar with typical
+data science workflows and do not need detailed explanations of the code. Notes that are 
+*specific to CML* will be emphasized in **block quotes**.
 
 ## *For both the R code and Python code models:*
 ### Initialize the Project
 There are a couple of steps needed at the start to configure the Project and Workspace 
 settings so each step will run sucessfully. You **must** run the project bootstrap 
-before running other steps. If you just want to launch the model interpretability 
-application without going through each step manually, then you can also deploy the 
-complete project. 
+before running the other steps.
 
-***Project bootstrap***
-
+#### **Project bootstrap**
 Open the file `0_bootstrap.py` in a normal workbench `python3` session. You need a larger
-instance of this to install tensorflow, at least a 1 vCPU / 8 GiB instance. Once the session 
-is loaded, click **Run > Run All Lines**. 
+instance of this to install `tensorflow`, at least a 1 vCPU / 8 GiB instance. 
+
+Once the session is loaded, click **Run > Run All Lines** (or the ► button).
 This will file will create an **Environment Variable** for the project called **STORAGE**, 
 which is the root of default file storage location for the Hive Metastore in the 
 DataLake (e.g. `s3a://my-default-bucket`). It will also upload the data used in the 
 project to `$STORAGE/datalake/data/sentiment/`. 
 
 The original data files for R code comes as part of this git repo in the `data` folder. The
-**R code** will 
+**R code** will create the hive tables needed for to build the model in later steps. 
 For the Python code the data and model files are too big for a github project and will be
-downloaded and created as part of the process. 
+downloaded and created as part of the setup process. 
 
 ## Project Build
 To build out the complete project, you need to go through each of the steps manually to build 
-and understand how the project works. There is more detail and explanation/comments in each 
-of the files/notebooks so its worth looking into those. Follow the steps below and you 
+and understand how the project works. There is more detail and explanation and comments in each 
+of the files and notebooks so its worth looking through those. Follow the steps below and you 
 will end up with a running application.
 
 ## *For the R code models:*
-This is the code needed to build and deploy a 
+This is the code that will build and deploy a Sentiment Prediction model using the data from the 
+Simpsons TV show. 
 
-**Engine Setup**
+### **Engine Setup**
 For those who are more comfortable running R-Studio as the text editor, or if you want to see
-how the R notebook file renders, you need to setup R-Studio as a [web based editor](https://docs.cloudera.com/machine-learning/cloud/projects/topics/ml-editors-browser-engine.html). The process 
-fairly straight forward, and for you now you can use an engine that has been uploaded to docker
-hub to make this easier: `splonge/cml:2020.07-rstudio` but you can follow the documented process
-and upload the resulting engine image to any accessable docker repo. To add the engine, you will
-need admin access to CML. In the **Admin > Engines** section, add a new engine as the per the 
-image below:
+how the R notebook file renders, you need to setup R-Studio as a 
+[web based editor](https://docs.cloudera.com/machine-learning/cloud/projects/topics/ml-editors-browser-engine.html). 
+The process fairly straight forward, and for you now you can use an engine that has been uploaded
+to dockerhub to make this easier: `splonge/cml:2020.07-rstudio`. 
+You can also follow the documented process and upload the resulting engine image to any 
+accessable docker repo. To add the engine, you will need admin access to CML. In the 
+**Admin > Engines** section, add a new engine as the per the image below:
 
 ![engines](images/adding_engines.png)
 
 The next step after adding the engine is to configure R-Studio as an editor.
-In the **Admin > Engines** section, click **Edit** on the newly added enging and add in the command to launch R  Studio `/usr/local/bin/rstudio-cdsw`
+In the **Admin > Engines** section, click **Edit** on the newly added enging and add in the command to launch R-Studio `/usr/local/bin/rstudio-cdsw`
 
 ![rstudio-editor](images/engine_editor_r.png)
 
 ### 1 Data Analysis (R Code)
-This file is an R notebook file that creates the datasets and hive tables necessary to train 
-the model in the next step. It also shows the process of obtaining the sentiment labels for 
-each sentence spoken by a Simpons character. There is a lot of detail explanation in this
-notebook.
+This file is an R notebook file that creates the datasets and hive tables required to train 
+the model in the next step. This is all done using Sparklyr. It also shows the process 
+of obtaining the sentiment labels for each sentence spoken by a Simpons character. There is a 
+lot of detail explanation in this notebook so it is worth taking the time to go through the
+detail. 
 
 To run this file, you need to open in an R-Studio session. In the
 **Project Settings** section, change the project engine to the R-Studio engine created in 
@@ -153,22 +154,52 @@ process and deploy a REST endpoint. Once the model is deployed, you can test it'
 from the model Model Overview page. 
 
 ## *For the Python code models:*
-This 
+This is the code that will build and deploy and Tensorflow based model using the Sentiment140
+training dataset. 
 
+### **Engine Setup**
+If you have them available and wish to use GPUs to speed up the model training, you need to 
+use and engine that has the the CUDA drivers and libraries preinstalled. 
+You can [create your own GPU engine image](https://docs.cloudera.com/documentation/data-science-workbench/latest/topics/cdsw_gpu.html#custom_cuda_engine) or you now you can use CUDA technical preview engine
+from Cloudera to make this easier: 
+
+`docker.repository.cloudera.com/cdsw/cuda-engine:10`. 
+
+See [here](https://docs.cloudera.com/documentation/data-science-workbench/latest/topics/cdsw_cuda_gpu_engine.html) for more details. 
+
+To add the engine, you will need admin access to CML. In the 
+**Admin > Engines** section, add a new engine as the per the image below:
+
+![engines](images/adding_engines.png)
+
+The next step after adding the engine is to configure Jupyter Notebook back as an editor.
+In the **Admin > Engines** section, click **Edit** on the newly added enging and add in 
+the command to launch Jupyter Notebook:
+
+ `/usr/local/bin/jupyter-notebook --no-browser --ip=127.0.0.1 --port=${CDSW_APP_PORT} --NotebookApp.token= --NotebookApp.allow_remote_access=True --log-level=ERROR`
+
+![rstudio-editor](images/engine_editor_j.png)
 
 ### 1 Read Data (Python Code)
-This is a Python file `Python Code/1_read_data.py` that will download and clean the data for the Sentiment Analysis model. The file does the following:
+This is a Python file that will download and clean the data for the Sentiment Analysis model. The file does the following:
 
-1) Download Sentiment140 training data from the Stanford url
+* Download Sentiment140 training data from the Stanford url
+* Extract the data files
+* Remove the LATIN1 encoding, and ensure only the UTF-8 encoded data is being used. This is done to avoid problems while using a Python CSV Reader.
 
-2) Extract the data files
+Open the `Python Code/1_read_data.py` file in a workbench session 
 
-3) Remove the LATIN1 encoding, and ensure only the UTF-8 encoded data is being used. This is done to avoid problems while using a Python CSV Reader.
-
-Open the file
 
 ### 2 Data Pre-processing and Model Training(Python Code)
 This Python file `2_pre-processing_and_model_training.py` performs the text pre-processing i.e. Tokenization, Padding, Embedding of the data, and the model building and training. Once the Tokenization is done, it is saved under the `models` folder as `sentiment140_tokenizer.pickle`, to use later, during Transfer Learning. Also, the model, after being trained, is saved on the same path as `model_conv1D_LSTM_with_batch_100_epochs.h5`.
+
+If you want to use GPU to make this process run faster, you need to use the CUDA engine. In the
+**Project Settings** section, change the project engine to the CUDA engine created in 
+a previous step.
+
+![project engine](images/project_engine.png)
+
+
 
 ### 3 Notebook on Data Pre-processing and Model Training(Python Code)
 The Jupyter Notebook `3_model_training_on_sentiment140_notebook.ipynb` shows a step-by-step process to build a sentiment analysis model from scratch. It is essentially a combination of `1_read_data.py` and `2_pre-processing_and_model_training.py` with a more detailed description of each step. Additionally, the Notebook also demonstrates some example sentences, and how the model classifies them.
