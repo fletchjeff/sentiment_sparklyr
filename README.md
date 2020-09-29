@@ -105,7 +105,7 @@ There is no pre-trained model provided for the R Code therefore you will need to
 previous step to deploy the model. 
 
 > _Note:_ This is a spark based Logistic Regression model and the approach here is to train 
-> the model using sparkly and to deploy the model using pyspark. 
+> the model using sparklyr and to deploy the model using pyspark. 
 
 To train the model, open the `R Code/2_Sentiment_Model.R` file in a workbench session: 
 `R, 1 vCPU, 4 GiB` and run the file. This will create 2 models, a word2vec transformer and a
