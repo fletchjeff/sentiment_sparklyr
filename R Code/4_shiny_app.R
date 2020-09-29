@@ -30,7 +30,7 @@ app <- shinyApp(ui <- fluidPage(
         "caption", "Test Sentence", "I have had a bad day"
       ),
       radioButtons(
-        "model", "Choose model:", c("Sparklyr" = "simp", "Tensorflow" = "dl")
+        "model", "Choose model:", c("R" = "simp", "Python" = "dl")
       ),
       submitButton("Get Sentiment", icon("arrow-right"))
     ),

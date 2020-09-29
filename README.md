@@ -93,7 +93,7 @@ the previous step.
 
 ![project engine](images/project_engine.png)
 
-Then launch a new R-Studio session with the R-Studio engine: 1 vCPU, 4 GiB. Then open the file 
+Then launch a new R-Studio session with the R-Studio engine: `1 vCPU, 4 GiB`. Then open the file 
 `R Code/1_data_analysis.Rmd`. In the file editor in R-Studio, click on **Run > Run All** and the 
 notebook code will execute and create the tables needed in the next step. 
 
@@ -231,61 +231,105 @@ run for that job. Once the first job complete, its will automatically start the 
 ![dependent jobs](images/job_dependency.png)
 
 ### 3 Notebook on Data Pre-processing and Model Training (Python Code)
-The Jupyter Notebook `3_model_training_on_sentiment140_notebook.ipynb` shows a step-by-step process to build a sentiment analysis model from scratch. It is essentially a combination of `1_read_data.py` and `2_pre-processing_and_model_training.py` with a more detailed description of each step. Additionally, the Notebook also demonstrates some example sentences, and how the model classifies them.
+The Jupyter Notebook file `3_model_training_on_sentiment140_notebook.ipynb` shows a step-by-step process to build a sentiment analysis model from scratch. It is essentially a combination of `1_read_data.py` and `2_pre-processing_and_model_training.py` with a more detailed description of each step. Additionally, the Notebook also demonstrates some example sentences, and how the model classifies them.
 
-
+To launch the notebook, you need to use the CUDA engine discussed earlier. Then launch a new Jupyter Notebook session with the CUDA engine: `2 vCPU, 8 GiB, 1 GPU`. Then open the file 
+`Python Code/3_model_training_on_sentiment140_notebook.ipynb`. From you can run through the
+notebook.
 
 ### 4 Model Deployment (Python Code)
 The `4_model_deployment.py` is a Python script used for deploying the model and making test predictions (classification, in this case). It contains a function called `predict_sentiment` which does the following:
 
-1) Load the previously saved Tokenizer and tokenize the Input sentence using that
+* Load the previously saved Tokenizer and tokenize the Input sentence using that
+* Load the previously trained model
+* Classify the input sentence as Positive or Negative statetment. The input sentence is passed as an argument to the function.
 
-2) Load the previously trained model
+From the Project page, click **Models > New Model** and create a new model with the 
+following details:
 
-3) Classify the input sentence as Positive or Negative statetment. The input sentence is passed as an argument to the function.
+* **Name**: python_model
+* **Description**: Python model
+* **Enable Authentication**: [ ] _unchecked_
+* **File**: Python Code/4_model_deployment.py
+* **Function**: predict_sentiment
+* **Input**: 
+```
+{
+  "sentence": "I've had a long day"
+}
+```
+* **Kernel**: Python 3
+* **Engine Profile**: 1vCPU / 4 GiB Memory
+* **GPUs**: 0 GPUs
+> _Note:_ For this model there is no speed up to be had using a GPU for model scoring, so
+> you don't need to hold resources unnecessarily.
 
+> ### _**Note:**_ **This next step is important!!**
+> **Before** you deploy the model, you must add in an **Environment Variable** `PYTHONMODEL` with 
+> a value of `1`. 
+> 
+> ![model env vars](images/model_env.png)
+>
+> Model deployment runs through a 
+> [build process](https://docs.cloudera.com/machine-learning/cloud/engines-overview/topics/ml-engines-models-experiments.html) 
+> that includes executing the `cdsw-build.sh` script. As this project deploys two very different
+> code requirements for the models, the single build-script needs to know which libraries and
+> requiresments to install. This is done by checking for the `PYTHONMODEL` 
+> **Environment Variable** and then executing that section of the script.
+> ```
+> if [ -z "$PYTHONMODEL" ]
+> then
+>    echo "R Model"
+>    Rscript "/home/cdsw/R Code/0_install.R"
+> else
+>     echo "Installing Python Requirements"
+>     pip3 install --progress-bar off tensorflow==2.2.0
+> ```
 
+Leave the rest unchanged. Click **Deploy Model** and the model will go through the build 
+process and deploy a REST endpoint. Once the model is deployed, you can test it's working 
+from the model Model Overview page. 
 
 ## *For both the R code and Python code models:*
 
 ### 5 Deploy Application
-The next step is to deploy the Flask application. The **[Applications](https://docs.cloudera.com/machine-learning/cloud/applications/topics/ml-applications.html)** feature is still quite new for CML. For this project it is used to deploy a web based application that interacts with the underlying model created in the previous step.
+The next step is to deploy a [Shiny](https://shiny.rstudio.com/) application using the CML 
+**[Applications](https://docs.cloudera.com/machine-learning/cloud/applications/topics/ml-applications.html)** 
+feature. For this project it is used to deploy a web based application that interacts with 
+the underlying models created in the previous step.
 
-_**Note: This next step is important**_
+> ### _**Note:**_ **This next step is important**
+> For both models you need to get the **Access Key** , go to **Model > Settings** and make a 
+> note (i.e. copy) the "Access Key". It will look something like this (ie. 
+> mukd9sit7tacnfq2phhn3whc4unq1f38)
+>
+> From the Project level click on "Open Workbench" (note you don't actually have to Launch a 
+> session) in order to edit a file. Select the `R Code\4_shiny_app.R` file and paste the Access 
+> Keys in to the `fetch_result` function. The first Access Key is for the R Model and the second
+> is for the Python model. 
+> 
+> ```
+> fetch_result <- function (sentence, model) {
+>   if (model == "simp") {
+>     accessKey <-  "mfd0yk8o4tfi13uua8hc9gzqxej0jc2s"
+>   }
+>   else {
+>     accessKey <-  "m7zzyhlbtr3ovq3tvaa2myowglhzpf3f"
+>   }
+> ```
+> Save the file (if it has not auto saved already) and go back to the Project.
 
-_In the deployed model from step 5, go to **Model > Settings** and make a note (i.e. copy) the 
-"Access Key". It will look something like this (ie. mukd9sit7tacnfq2phhn3whc4unq1f38)_
-
-_From the Project level click on "Open Workbench" (note you don't actually have to Launch a 
-session) in order to edit a file. Select the flask/single_view.html file and paste the Access 
-Key in at line 19._
-
-```
-fetch_result <- function (sentence, model) {
-  if (model == "simp") {
-    accessKey <-  "mfd0yk8o4tfi13uua8hc9gzqxej0jc2s"
-  }
-  else {
-    accessKey <-  "m7zzyhlbtr3ovq3tvaa2myowglhzpf3f"
-  }
-```
-`        const accessKey = "mp3ebluylxh4yn5h9xurh1r0430y76ca";`
-
-_Save the file (if it has not auto saved already) and go back to the Project._
-
-From the Go to the **Applications** section and select "New Application" with the following:
-* **Name**: Churn Analysis App
-* **Subdomain**: churn-app _(note: this needs to be unique, so if you've done this before, 
+From there Go to the **Applications** section and select "New Application" with the following:
+* **Name**:Senitment Predictor
+* **Subdomain**: sentibot _(note: this needs to be unique, so if you've done this before, 
 pick a more random subdomain name)_
-* **Script**: 6_application.py
-* **Kernel**: Python 3
+* **Script**: R Code/4_shiny_app.R
+* **Kernel**: R
 * **Engine Profile**: 1vCPU / 2 GiB Memory
 
-
-After the Application deploys, click on the blue-arrow next to the name. The initial view is a 
-table of randomly selected from the dataset. This shows a global view of which features are 
-most important for the predictor model. The reds show incresed importance for preditcting a 
-cusomter that will churn and the blues for for customers that will not.
+After the Application deploys, click on the blue-arrow next to the name to launch the 
+applicatio. This application is self explanitory, type in a sentence and choose which model
+to send it to to get a sentiment prediction back.
 
 ![application](images/app.png)
   
