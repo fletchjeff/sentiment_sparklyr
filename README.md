@@ -187,8 +187,8 @@ This is a Python file that will download and clean the data for the Sentiment An
 * Extract the data files
 * Remove the LATIN1 encoding, and ensure only the UTF-8 encoded data is being used. This is done to avoid problems while using a Python CSV Reader.
 
-Open the `Python Code/1_read_data.py` file in a workbench session 
-
+Open the `Python Code/1_read_data.py` file in a workbench session: `Python 3, 1 vCPU, 4GiB` and
+click **Run > Run All Lines** (or the ► button).
 
 ### 2 Data Pre-processing and Model Training(Python Code)
 This Python file `2_pre-processing_and_model_training.py` performs the text pre-processing i.e. Tokenization, Padding, Embedding of the data, and the model building and training. Once the Tokenization is done, it is saved under the `models` folder as `sentiment140_tokenizer.pickle`, to use later, during Transfer Learning. Also, the model, after being trained, is saved on the same path as `model_conv1D_LSTM_with_batch_100_epochs.h5`.
@@ -197,27 +197,43 @@ If you want to use GPU to make this process run faster, you need to use the CUDA
 **Project Settings** section, change the project engine to the CUDA engine created in 
 a previous step.
 
-![project engine](images/project_engine.png)
+![project engine](images/project_engine_cuda.png)
 
+> _Note:_ its possible to switch engines during projects so you can use both the R-Studio engine
+> and the CUDA engine for the different session requirements. 
 
+The other way to train the model is to run these last to steps as a sequence of dependent jobs. 
+First create a job to fetch and read the data
 
-### 3 Notebook on Data Pre-processing and Model Training(Python Code)
-The Jupyter Notebook `3_model_training_on_sentiment140_notebook.ipynb` shows a step-by-step process to build a sentiment analysis model from scratch. It is essentially a combination of `1_read_data.py` and `2_pre-processing_and_model_training.py` with a more detailed description of each step. Additionally, the Notebook also demonstrates some example sentences, and how the model classifies them.
-
-***Jobs***
-
-The **[Jobs](https://docs.cloudera.com/machine-learning/cloud/jobs-pipelines/topics/ml-creating-a-job.html)**
-feature allows for adhoc, recurring and depend jobs to run specific scripts. To run this model 
-training process as a job, create a new job by going to the Project window and clicking _Jobs >
-New Job_ and entering the following settings:
-* **Name** : Train Mdoel
-* **Script** : 4_train_models.py
+* **Name** : Train Python Model 1
+* **Script** : Python Code/1_read_data.py
 * **Arguments** : _Leave blank_
 * **Kernel** : Python 3
 * **Schedule** : Manual
-* **Engine Profile** : 1 vCPU / 2 GiB
-The rest can be left as is. Once the job has been created, click **Run** to start a manual 
-run for that job.
+* **Engine Profile** : 1 vCPU / 4 GiB
+* **GPUs** : 0 GPUs
+
+The rest can be left as is. Then create a second job to train the model:
+
+* **Name** : Train Python Model 2
+* **Script** : Python Code/2_pre-processing_and_model_training.py
+* **Arguments** : _Leave blank_
+* **Kernel** : Python 3
+* **Schedule** : Dependent > Train Python Model 1
+* **Engine Profile** : 2 vCPU / 8 GiB
+* **GPUs** : 1 GPUs
+
+> _Note:_ you have to set the project engine to the CUDA engine for this job to use GPU acceleration.
+
+Once the job has been created, click **Run** on the `Train Python Model 1` job to start a manual 
+run for that job. Once the first job complete, its will automatically start the second job.
+
+![dependent jobs](images/job_dependency.png)
+
+### 3 Notebook on Data Pre-processing and Model Training (Python Code)
+The Jupyter Notebook `3_model_training_on_sentiment140_notebook.ipynb` shows a step-by-step process to build a sentiment analysis model from scratch. It is essentially a combination of `1_read_data.py` and `2_pre-processing_and_model_training.py` with a more detailed description of each step. Additionally, the Notebook also demonstrates some example sentences, and how the model classifies them.
+
+
 
 ### 4 Model Deployment (Python Code)
 The `4_model_deployment.py` is a Python script used for deploying the model and making test predictions (classification, in this case). It contains a function called `predict_sentiment` which does the following:
